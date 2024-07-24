@@ -17,7 +17,7 @@ services:
       - ./:/var/www/html
     ports:
       - 80:80
-      - 443:443
+      - 8443:443  # Changed from 443:443 to 8443:443
     depends_on:
       - db
     restart: unless-stopped
