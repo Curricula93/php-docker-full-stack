@@ -3,9 +3,9 @@ services:
   db:
     image: mysql:latest
     environment:
-      - MYSQL_DATABASE=${MYSQL_DATABASE:-php_docker}
-      - MYSQL_USER=${MYSQL_USER:-php_docker}
-      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-password}
+      - MYSQL_DATABASE=php_docker
+      - MYSQL_USER=php_docker
+      - MYSQL_PASSWORD=password
       - MYSQL_ALLOW_EMPTY_PASSWORD=0
     volumes:
       - mysql_data:/var/lib/mysql
@@ -22,10 +22,13 @@ services:
       - APACHE_RUN_USER=www-data
       - APACHE_RUN_GROUP=www-data
     command: >
-      bash -c "chown -R www-data:www-data /var/www/html &&
-               chmod -R 755 /var/www/html &&
-               a2enmod rewrite &&
-               apache2-foreground"
+      bash -c "
+        docker-php-ext-install mysqli &&
+        chown -R www-data:www-data /var/www/html &&
+        chmod -R 755 /var/www/html &&
+        a2enmod rewrite &&
+        apache2-foreground
+      "
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
