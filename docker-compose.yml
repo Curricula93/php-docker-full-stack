@@ -1,61 +1,72 @@
-version: '3.8'
+version: '3'
+
 services:
-  app:
-    image: php:8.2-apache
-    container_name: ${COOLIFY_APP_NAME}_php
+  traefik:
+    image: traefik:v2.9
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:8080"
+      - "--entrypoints.websecure.address=:8443"
+    ports:
+      - "8080:8080"
+      - "8443:8443"
     volumes:
-      - ${COOLIFY_VOLUME_APP}:/var/www/html
-    environment:
-      - APP_ENV=production
-      - DB_HOST=db
-      - DB_NAME=${COOLIFY_DATABASE_NAME}
-      - DB_USER=${COOLIFY_DATABASE_USER}
-      - DB_PASSWORD=${COOLIFY_DATABASE_PASSWORD}
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - company_network
+
+  php_apache:
+    container_name: php_8.2_apache_container
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - C:\company:/var/www/html
+    networks:
+      - company_network
     depends_on:
-      - db
-    networks:
-      - app_network
+      - mysql
     labels:
-      - coolify.enable=true
-  
-  db:
-    image: mysql:8.0
-    container_name: ${COOLIFY_APP_NAME}_mysql
+      - "traefik.enable=true"
+      - "traefik.http.routers.php.rule=Host(`https://swk8g4g.curricula.com.ng`)"
+      - "traefik.http.routers.php.entrypoints=websecure"
+      - "traefik.http.services.php.loadbalancer.server.port=80"
+
+  mysql:
+    image: mysql:8.1.0
+    container_name: mysql_8.1.0_container
     environment:
-      - MYSQL_DATABASE=${COOLIFY_DATABASE_NAME}
-      - MYSQL_USER=${COOLIFY_DATABASE_USER}
-      - MYSQL_PASSWORD=${COOLIFY_DATABASE_PASSWORD}
-      - MYSQL_ROOT_PASSWORD=${COOLIFY_DATABASE_ROOT_PASSWORD}
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: company
+      MYSQL_USER: root
     volumes:
-      - ${COOLIFY_VOLUME_DATABASE}:/var/lib/mysql
+      - C:\company\mysql:/var/lib/mysql
     networks:
-      - app_network
+      - company_network
 
   redis:
-    image: redis:alpine
-    container_name: ${COOLIFY_APP_NAME}_redis
+    image: redis:7.2.1
+    container_name: redis_7.2.1_container
+    restart: always
     networks:
-      - app_network
+      - company_network
 
   phpmyadmin:
-    image: phpmyadmin/phpmyadmin
-    container_name: ${COOLIFY_APP_NAME}_phpmyadmin
+    image: phpmyadmin:5.2.1
+    container_name: phpmyadmin_container
+    restart: always
     environment:
-      - PMA_HOST=db
-      - PMA_USER=root
-      - PMA_PASSWORD=${COOLIFY_DATABASE_ROOT_PASSWORD}
-    depends_on:
-      - db
+      - PMA_HOST=mysql
+      - PMA_PORT=3306
     networks:
-      - app_network
+      - company_network
     labels:
-      - coolify.enable=true
+      - "traefik.enable=true"
+      - "traefik.http.routers.phpmyadmin.rule=Host(`https://z4c0g44.curricula.com.ng`)"
+      - "traefik.http.routers.phpmyadmin.entrypoints=websecure"
+      - "traefik.http.services.phpmyadmin.loadbalancer.server.port=80"
 
 networks:
-  app_network:
-    driver: bridge
-
-volumes:
-  db_data:
-    name: ${COOLIFY_VOLUME_DATABASE}
-    external: true
+  company_network:
