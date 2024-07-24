@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-  # PHP application with Apache
   app:
     image: php:8.2-apache
     container_name: php_app
@@ -18,7 +17,6 @@ services:
     networks:
       - app_network
 
-  # MySQL database
   db:
     image: mysql:8.0
     container_name: mysql_db
@@ -32,7 +30,6 @@ services:
     networks:
       - app_network
 
-  # Nginx reverse proxy
   nginx:
     image: nginx:alpine
     container_name: nginx_proxy
@@ -47,10 +44,21 @@ services:
     networks:
       - app_network
 
-  # Redis for caching
   redis:
     image: redis:alpine
     container_name: redis_cache
+    networks:
+      - app_network
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
+    environment:
+      - PMA_HOST=db
+      - PMA_USER=root
+      - PMA_PASSWORD=rootpassword
+    depends_on:
+      - db
     networks:
       - app_network
 
