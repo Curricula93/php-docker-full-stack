@@ -1,64 +1,55 @@
 version: '3.8'
-
 services:
   app:
     image: php:8.2-apache
-    container_name: php_app
+    container_name: ${COOLIFY_APP_NAME}_php
     volumes:
-      - ./src:/var/www/html
+      - ${COOLIFY_VOLUME_APP}:/var/www/html
     environment:
       - APP_ENV=production
       - DB_HOST=db
-      - DB_NAME=myapp
-      - DB_USER=dbuser
-      - DB_PASSWORD=dbpassword
+      - DB_NAME=${COOLIFY_DATABASE_NAME}
+      - DB_USER=${COOLIFY_DATABASE_USER}
+      - DB_PASSWORD=${COOLIFY_DATABASE_PASSWORD}
     depends_on:
       - db
     networks:
       - app_network
-
+    labels:
+      - coolify.enable=true
+  
   db:
     image: mysql:8.0
-    container_name: mysql_db
+    container_name: ${COOLIFY_APP_NAME}_mysql
     environment:
-      - MYSQL_DATABASE=myapp
-      - MYSQL_USER=dbuser
-      - MYSQL_PASSWORD=dbpassword
-      - MYSQL_ROOT_PASSWORD=rootpassword
+      - MYSQL_DATABASE=${COOLIFY_DATABASE_NAME}
+      - MYSQL_USER=${COOLIFY_DATABASE_USER}
+      - MYSQL_PASSWORD=${COOLIFY_DATABASE_PASSWORD}
+      - MYSQL_ROOT_PASSWORD=${COOLIFY_DATABASE_ROOT_PASSWORD}
     volumes:
-      - db_data:/var/lib/mysql
-    networks:
-      - app_network
-
-  nginx:
-    image: nginx:alpine
-    container_name: nginx_proxy
-    
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./ssl:/etc/nginx/ssl:ro
-    depends_on:
-      - app
+      - ${COOLIFY_VOLUME_DATABASE}:/var/lib/mysql
     networks:
       - app_network
 
   redis:
     image: redis:alpine
-    container_name: redis_cache
+    container_name: ${COOLIFY_APP_NAME}_redis
     networks:
       - app_network
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
-    container_name: phpmyadmin
+    container_name: ${COOLIFY_APP_NAME}_phpmyadmin
     environment:
       - PMA_HOST=db
       - PMA_USER=root
-      - PMA_PASSWORD=rootpassword
+      - PMA_PASSWORD=${COOLIFY_DATABASE_ROOT_PASSWORD}
     depends_on:
       - db
     networks:
       - app_network
+    labels:
+      - coolify.enable=true
 
 networks:
   app_network:
@@ -66,3 +57,5 @@ networks:
 
 volumes:
   db_data:
+    name: ${COOLIFY_VOLUME_DATABASE}
+    external: true
