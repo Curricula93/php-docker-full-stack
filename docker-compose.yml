@@ -18,6 +18,13 @@ services:
     depends_on:
       - db
     restart: unless-stopped
+    environment:
+      - APACHE_RUN_USER=#1000
+      - APACHE_RUN_GROUP=#1000
+    command: >
+      bash -c "chown -R www-data:www-data /var/www/html &&
+               chmod -R 755 /var/www/html &&
+               apache2-foreground"
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
