@@ -15,7 +15,6 @@ services:
     image: php:apache
     volumes:
       - ./:/var/www/html
-      - ./apache-config.conf:/etc/apache2/sites-available/000-default.conf
     depends_on:
       - db
     restart: unless-stopped
@@ -28,6 +27,15 @@ services:
         chown -R www-data:www-data /var/www/html &&
         chmod -R 755 /var/www/html &&
         a2enmod rewrite &&
+        echo '<VirtualHost *:80>
+                DocumentRoot /var/www/html
+                <Directory /var/www/html>
+                    Options Indexes FollowSymLinks
+                    AllowOverride All
+                    Require all granted
+                    DirectoryIndex index.php
+                </Directory>
+              </VirtualHost>' > /etc/apache2/sites-available/000-default.conf &&
         apache2-foreground
       "
 
