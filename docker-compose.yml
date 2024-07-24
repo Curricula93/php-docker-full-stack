@@ -19,11 +19,12 @@ services:
       - db
     restart: unless-stopped
     environment:
-      - APACHE_RUN_USER=#1000
-      - APACHE_RUN_GROUP=#1000
+      - APACHE_RUN_USER=www-data
+      - APACHE_RUN_GROUP=www-data
     command: >
       bash -c "chown -R www-data:www-data /var/www/html &&
                chmod -R 755 /var/www/html &&
+               echo '<?php phpinfo(); ?>' > /var/www/html/index.php &&
                apache2-foreground"
 
   phpmyadmin:
